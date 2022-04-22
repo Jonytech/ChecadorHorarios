@@ -5,7 +5,13 @@ import checadorhorarios.Template;
 import com.models.GenerarReporteSeleccionModel;
 import com.views.frmGenerarReporteSeleccion;
 import java.awt.event.MouseEvent;
+import java.io.File;
 import java.util.ArrayList;
+import java.util.List;
+import javax.swing.JFileChooser;
+import javax.swing.JOptionPane;
+import javax.swing.JTable;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.table.DefaultTableModel;
 
 public class GenerarReporteSeleccionController extends Controller {
@@ -95,12 +101,48 @@ public class GenerarReporteSeleccionController extends Controller {
         generarReporteSeleccionV.individualTbl.setModel(modelo);
     }
     
+    private void exportarReporteGeneral() {
+        //Validar que el JTable tenga filas
+        if( generarReporteSeleccionV.generalTbl.getRowCount() == 0 ) {
+            JOptionPane.showMessageDialog(generarReporteSeleccionV, "Lo sentimos, no se ha encontrado información para exportar");
+        } else {
+            
+            //Creamos un JFileChooser para elegir la ubicación del XLS
+            JFileChooser seleccionar = new JFileChooser();
+            FileNameExtensionFilter filtro = new FileNameExtensionFilter("reporteIndividual", ".xls");
+            seleccionar.setFileFilter(filtro);
+            seleccionar.setDialogTitle("Guardar reporte");
+            seleccionar.setMultiSelectionEnabled(false);
+            seleccionar.setAcceptAllFileFilterUsed(false);
+
+            if( seleccionar.showSaveDialog(null) == JFileChooser.APPROVE_OPTION ) {
+                List<JTable> tabla = new ArrayList<>();
+                List<String> nom = new ArrayList<>();
+                tabla.add(generarReporteSeleccionV.generalTbl);
+                nom.add("Reporte Individual");
+                String archivo = seleccionar.getSelectedFile().toString().concat(".xls");
+
+                //Se llama al método para guardar de ExportarReporteController
+                try {
+                    ExportarReporteController exportar = new ExportarReporteController(new File(archivo), tabla, nom);
+                    if( exportar.exportarReporte() ) {
+                        JOptionPane.showMessageDialog(generarReporteSeleccionV, "¡El reporte fue exportado con éxito!");
+                    }
+                } catch (Exception e) {
+                    System.out.println("Error: " + e);
+                }
+            }
+            
+        }
+    }
+    
     @Override
     public void mouseClicked(MouseEvent e) {
         switch(generarReporteSeleccionV.opcion){
             case "exportar":
-                //generarReporteSeleccionV.dispose();
-                //Template.abrirGenerarReporteSeleccion(generarReporteM.getIdEmpleado(), generarReporteV.opcion);
+                exportarReporteGeneral();
+                generarReporteSeleccionV.dispose();
+                Template.abrirMenuPrincipal();
                 break;
             
             case "salir":
